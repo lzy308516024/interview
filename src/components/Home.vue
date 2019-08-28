@@ -5,25 +5,29 @@
             <button @click="sortByType">按类型排序</button>
         </div>
         <div class="img-wrap">
-            <div class="box" v-for="(item,index) in list" :key= "index">
-                <div class="little">
-                    <img :src="item.url" alt="">
-                </div>
-                
+            <div class="box" v-for="(item,index) in list" :key= "index" >
                 <p>名字：<span>{{item.name}} +++ {{item.sort}}</span></p>
                 <p>创建日期<span>{{item.create_time}}</span></p>
+                <div class="little">
+                    <img :src="item.url" alt="" :img-attr="item.id"   draggable="true"  @dragstart="dragstart($event, item.id)" @dragend="dragend" @drop="drop" @dragover.prevent/>
+                </div>
             </div>
         </div>
     </div>
 </template>
 <script>
 import { data } from './data.js'
+
 export default {
+    
+
     data(){
         return {
          
             list:[],
-            list1:null
+            start:null,
+            end:null,
+            flag:false
         }
     },
     mounted(){
@@ -31,6 +35,7 @@ export default {
     },
     methods:{
         sortByDate(){
+            this.flag =false
             data.sort((a,b) => {
                 
                 return a.create_time<b.create_time ? 1:-1;
@@ -38,11 +43,59 @@ export default {
             this.list = data;
         },
         sortByType(){
-            
+            this.flag = true
             this.list.sort(function(a,b){
                 return a.sort>b.sort?1:-1
             }) 
+        },
+       
+        dragstart (event, data) {
+            
+            this.start = data
+           
+            
+        },
+        dragend (event) {
+            event.dataTransfer.clearData()
+        },
+        drop (event) {
+           
+           if(this.flag){
+             this.end = event.toElement.getAttribute('img-attr');
+            
+            this.dropData = data
+            let obj1 = {id:this.start}
+            let obj2= {id:this.end}
+            for(var i=0,len = this.list.length;i<len;i++ ){
+                if(this.start == this.list[i].id){
+                    obj1.url = this.list[i].url
+                    obj1.sort = this.list[i].sort
+                    obj1.name = this.list[i].name
+                }
+                if(this.end == this.list[i].id){
+                    obj2.url = this.list[i].url
+                    obj2.sort = this.list[i].sort
+                    obj2.name = this.list[i].name
+                }
+            }
+            this.list.map((item)=>{
+                if(item.id == obj1.id){
+                    item.url = obj2.url;
+                    item.sort = obj2.sort
+                    item.name = obj2.name
+                }
+                 if(item.id == obj2.id){
+                    item.url = obj1.url;
+                    item.sort = obj1.sort
+                    item.name = obj1.name
+                }
+            })
+          
+
+           }
+            
         }
+       
     }
 }
 </script>
